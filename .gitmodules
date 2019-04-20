@@ -1,0 +1,6 @@
+[submodule "src/garden-runc-release"]
+	path = src/garden-runc-release
+	url = https://github.com/cloudfoundry/garden-runc-release
+[submodule "src/concourse"]
+	path = src/concourse
+	url = https://github.com/concourse/concourse
