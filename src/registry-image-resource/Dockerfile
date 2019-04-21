@@ -11,4 +11,4 @@ FROM cirocosta/golang-builder AS base
 
 FROM ubuntu:bionic
 
-	COPY --from=builder assets/ /opt/resource/
+	COPY --from=base assets/ /opt/resource/
