@@ -47,7 +47,7 @@ concourse:
 	
 # build gdn
 #
-gdn: gdn-cmd gdn-init
+gdn: gdn-cmd gdn-init gdn-dadoo
 
 
 gdn-cmd:
@@ -58,8 +58,19 @@ gdn-cmd:
 				-o /tmp/concourse/bin/gdn \
 				./cmd/gdn
 
+gdn-dadoo:
+	cd ./src/garden-runc-release/src/guardian && \
+		CGO_ENABLED=0 \
+			go build -v \
+				$(GOLANG_BUILD_FLAGS) \
+				-o /tmp/concourse/bin/gdn-dadoo \
+				./cmd/dadoo
+
 gdn-init:
-	echo "TODO"
+	cd ./src/garden-runc-release/src/guardian/cmd/init && \
+		gcc -static \
+			-o /tmp/concourse/bin/garden-init \
+			init.c ignore_sigchild.c
 
 
 golang-builder:
@@ -75,10 +86,11 @@ registry-image-resource:
 	docker create --name temp \
 		cirocosta/registry-image-resource
 	cd /tmp/concourse/resource-types/registry-image && \
-		docker export temp | gzip \
-			> ./rootfs.tgz && \
-		echo '{ "type": "registry-image", "version": "0.0.1" }' \
-			> resource_metadata.json
+		docker export temp > /tmp/image.tar
+	tar --delete --wildcards -f /tmp/image.tar "dev/"
+	cat /tmp/image.tar | gzip > /tmp/concourse/resource-types/registry-image/rootfs.tgz
+	echo '{ "type": "registry-image", "version": "0.0.1" }' \
+			> /tmp/concourse/resource-types/registry-image/resource_metadata.json
 	docker rm temp
 
 
