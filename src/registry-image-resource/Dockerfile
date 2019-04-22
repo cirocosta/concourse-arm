@@ -11,4 +11,5 @@ FROM cirocosta/golang-builder AS base
 
 FROM ubuntu:bionic
 
+	RUN apt update && apt install -y ca-certificates
 	COPY --from=base assets/ /opt/resource/

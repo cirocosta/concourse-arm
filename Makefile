@@ -23,7 +23,7 @@ rc: | fly concourse gdn resource-types runc
 
 
 run:
-	CONCOURSE_GARDEN_NETWORK_PLUGIN=/bin/true \
+	CONCOURSE_GARDEN_ALLOW_HOST_ACCESS=true \
 	CONCOURSE_GARDEN_LOG_LEVEL=debug \
 	CONCOURSE_GARDEN_INIT_BIN=$(BUILD_DIR)/bin/gdn-init \
 	CONCOURSE_GARDEN_RUNTIME_PLUGIN=$(BUILD_DIR)/bin/gdn-runc \
@@ -117,11 +117,8 @@ registry-image-resource:
 	docker create --name temp \
 		cirocosta/registry-image-resource
 	cd $(BUILD_DIR)/resource-types/registry-image && \
-		docker export temp > /tmp/image.tar
-	tar --delete --wildcards -f /tmp/image.tar "dev/"
-	cat /tmp/image.tar | gzip > $(BUILD_DIR)/resource-types/registry-image/rootfs.tgz
-	echo '{ "type": "registry-image", "version": "0.0.1" }' \
-			> $(BUILD_DIR)/resource-types/registry-image/resource_metadata.json
+		docker export temp | gzip > ./rootfs.tgz && \
+		echo '{ "type": "registry-image", "version": "0.0.1" }' > resource_metadata.json
 	docker rm temp
 
 
