@@ -1,6 +1,7 @@
-FROM cirocosta/golang-builder AS base
+FROM golang:alpine AS base
 
-	RUN git clone https://github.com/concourse/registry-image-resource /src
+	RUN apk add --update git
+	RUN git clone --branch=platform https://github.com/concourse/registry-image-resource /src
 	WORKDIR /src
 
 	RUN go mod download
@@ -9,7 +10,7 @@ FROM cirocosta/golang-builder AS base
 	RUN go build -o /assets/check ./cmd/check
 
 
-FROM ubuntu:bionic
+FROM alpine
 
-	RUN apt update && apt install -y ca-certificates
+	RUN apk add --update ca-certificates
 	COPY --from=base assets/ /opt/resource/

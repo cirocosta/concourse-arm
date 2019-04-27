@@ -1,5 +1,5 @@
 GOLANG_BUILD_FLAGS = -tags netgo -ldflags '-w -extldflags "-static"'
-BUILD_DIR = /tmp/concourse
+BUILD_DIR = /usr/local/concourse
 
 
 # produces a tarball for installing concourse.
@@ -29,12 +29,13 @@ run:
 	CONCOURSE_GARDEN_RUNTIME_PLUGIN=$(BUILD_DIR)/bin/gdn-runc \
 	CONCOURSE_GARDEN_DADOO_BIN=$(BUILD_DIR)/bin/gdn-dadoo \
 		sudo -E $(BUILD_DIR)/bin/concourse worker \
-			--tag=arm \
 			--name=raspberry-pi \
-			--work-dir=/tmp \
-			--tsa-worker-private-key=./key \
+			--resource-types=$(BUILD_DIR)/resource-types \
+			--tag=arm \
 			--tsa-host=hush-house.pivotal.io:2222 \
-			--tsa-public-key=tsa-public-key
+			--tsa-public-key=tsa-public-key \
+			--tsa-worker-private-key=./key \
+			--work-dir=/tmp
 
 
 
@@ -118,7 +119,7 @@ registry-image-resource:
 		cirocosta/registry-image-resource
 	cd $(BUILD_DIR)/resource-types/registry-image && \
 		docker export temp | gzip > ./rootfs.tgz && \
-		echo '{ "type": "registry-image", "version": "0.0.1" }' > resource_metadata.json
+		echo '{ "type": "registry-image-arm", "version": "0.0.3" }' > resource_metadata.json
 	docker rm temp
 
 
@@ -127,3 +128,13 @@ registry-image-resource-image:
 		docker build \
 			-t cirocosta/registry-image-resource \
 			.
+
+stop-docker:
+	sudo systemctl stop docker
+	sudo iptables -P INPUT ACCEPT
+	sudo iptables -P FORWARD ACCEPT
+	sudo iptables -P OUTPUT ACCEPT
+	sudo iptables -t nat -F
+	sudo iptables -t mangle -F
+	sudo iptables -F
+	sudo iptables -X
