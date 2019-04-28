@@ -1,0 +1,17 @@
+resources:
+  - name: repository
+    type: git
+    source:
+      uri: https://((github-token))@github.com/cirocosta/concourse-arm
+      branch: dockerized-builds
+
+ 
+jobs:
+  - name: build
+    public: true
+    plan:
+      - get: repository
+        trigger: true
+      - task: build-image
+        privileged: true
+        file: repository/ci/tasks/build-image.yml
