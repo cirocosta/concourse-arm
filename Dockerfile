@@ -89,7 +89,7 @@ FROM concourse-base AS fly-build
 		./fly
 
 
-FROM scratch AS release
+FROM alpine AS binaries
 
 	COPY --from=concourse-build 		/usr/local/bin/concourse 	/usr/local/concourse/bin/concourse
 	COPY --from=fly-build 			/usr/local/bin/fly 		/usr/local/concourse/bin/fly
@@ -98,3 +98,24 @@ FROM scratch AS release
 	COPY --from=gdn-dadoo-build 		/usr/local/bin/gdn-dadoo	/usr/local/concourse/bin/gdn-dadoo
 	COPY --from=gdn-init-build 		/usr/local/bin/gdn-init		/usr/local/concourse/bin/gdn-init
 
+
+# resource types
+#
+
+FROM base AS registry-image-resource-build
+
+	COPY ./src/concourse /src
+	WORKDIR /src
+
+	RUN go build -o /assets/in ./cmd/in
+	RUN go build -o /assets/out ./cmd/out
+	RUN go build -o /assets/check ./cmd/check
+
+
+FROM arm32v7/ubuntu:bionic AS registry-image-resource
+
+	COPY --from=base assets/ /opt/resource/
+	RUN set -x && \
+		apt update -y && \
+		apt install -y ca-certificates && \
+		rm -rf /var/lib/apt/lists/*
