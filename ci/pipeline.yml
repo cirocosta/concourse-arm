@@ -5,13 +5,53 @@ resources:
       uri: https://((github-token))@github.com/cirocosta/concourse-arm
       branch: dockerized-builds
 
+  - name: builder
+    type: git
+    source:
+      uri: https://github.com/cirocosta/builder
+      branch: target
+
+  - name: builder-image
+    type: registry-image
+    source: { repository: cirocosta/builder }
+
+  - name: base-image
+    type: registry-image
+    source: { repository: alpine }
+
  
 jobs:
   - name: build
     public: true
     plan:
-      - get: repository
-        trigger: true
-      - task: build-image
-        privileged: true
-        file: repository/ci/tasks/build-image.yml
+      - aggregate:
+        - get: repository
+          trigger: true
+        - get: builder-image
+
+      - aggregate:
+        - task: build-binaries
+          image: builder-image
+          privileged: true
+          params: { TARGET: binaries }
+          output_mapping: { image: image_binaries }
+          file: repository/ci/tasks/build-image.yml
+
+        - task: build-registry-image-resource
+          image: builder-image
+          privileged: true
+          params: { TARGET: registry-image-resource }
+          output_mapping: { image: image_registry-image-resource }
+          file: repository/ci/tasks/build-image.yml
+
+      - task: produce-rc
+        image: image_binaries
+        config:
+          platform: linux
+          inputs: [{name: image_registry-image-resource}]
+          run:
+            path: /bin/sh
+            args:
+              - -ce
+              - |
+                find .
