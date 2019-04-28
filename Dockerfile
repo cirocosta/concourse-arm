@@ -30,7 +30,7 @@ FROM base AS runc-build
 
 	RUN go build \
 		-ldflags "-X main.gitCommit=dirty -X main.version=1.0.0-rc8+dev" \
-		-o runc \
+		-o /usr/local/bin/runc \
 		-tags "seccomp" \
 		-v \
 		.
