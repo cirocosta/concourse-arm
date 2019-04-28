@@ -5,19 +5,9 @@ resources:
       uri: https://((github-token))@github.com/cirocosta/concourse-arm
       branch: dockerized-builds
 
-  - name: builder
-    type: git
-    source:
-      uri: https://github.com/cirocosta/builder
-      branch: target
-
   - name: builder-image
     type: registry-image
     source: { repository: cirocosta/builder }
-
-  - name: base-image
-    type: registry-image
-    source: { repository: alpine }
 
  
 jobs:

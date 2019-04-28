@@ -114,7 +114,7 @@ FROM base AS registry-image-resource-build
 
 FROM arm32v7/ubuntu:bionic AS registry-image-resource
 
-	COPY --from=base assets/ /opt/resource/
+	COPY --from=registry-image-resource-build assets/ /opt/resource/
 	RUN set -x && \
 		apt update -y && \
 		apt install -y ca-certificates && \
