@@ -5,6 +5,9 @@
 [submodule "src/concourse"]
 	path = src/concourse
 	url = https://github.com/concourse/concourse
+[submodule "src/registry-image-resource"]
+	path = src/registry-image-resource
+	url = https://github.com/concourse/registry-image-resource
 [submodule "src/github.com/opencontainers/runc"]
 	path = src/github.com/opencontainers/runc
 	url = https://github.com/opencontainers/runc
