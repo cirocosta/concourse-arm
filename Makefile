@@ -2,16 +2,41 @@ GOLANG_BUILD_FLAGS = -tags netgo -ldflags '-w -extldflags "-static"'
 BUILD_DIR = /usr/local/concourse
 
 
+dockerized: | dockerized-binaries dockerized-registry-image-resource
+	tar -czvf ./concourse.tgz -C ./build concourse/
+
+dockerized-binaries:
+	mkdir -p ./build/concourse/bin
+	docker build -t binaries --target binaries .
+	docker rm binaries || true
+	docker create --name binaries binaries
+	docker cp binaries:/usr/local/concourse/bin/ ./build/concourse/bin/
+
+dockerized-registry-image-resource:
+	docker build -f ./Dockerfile.registry-image-resource -t registry-image-resource .
+	mkdir -p ./build/concourse/resource-types/registry-image
+	docker rm temp || true
+	docker create --name temp \
+		registry-image-resource
+	cd ./build/concourse/resource-types/registry-image && \
+		docker export temp | gzip > ./rootfs.tgz && \
+		echo '{ "type": "registry-image-arm", "version": "0.0.3" }' > resource_metadata.json
+	docker rm temp
+
+
+clean:
+	rm -rf ./build
+
+
 # produces a tarball for installing concourse.
 #
 # .
 # ├── bin
 # │   ├── concourse
+# │   ├── fly
+# │   ├── gdn-init
+# │   ├── gdn-dadoo
 # │   └── gdn
-# ├── fly-assets
-# │   ├── fly-darwin-amd64.tgz
-# │   ├── fly-linux-amd64.tgz
-# │   └── fly-windows-amd64.zip
 # └── resource-types
 #     └── git
 # 	├── resource_metadata.json
