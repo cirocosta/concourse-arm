@@ -53,7 +53,7 @@ FROM base-${arch} AS runc-build
 
 # gdn - 
 #
-FROM base AS gdn-base
+FROM base-${arch} AS gdn-base
 
 	COPY ./src/guardian /src
 	WORKDIR /src
@@ -83,7 +83,7 @@ FROM gdn-base AS gdn-init-build
 
 # concourse - 
 #
-FROM base AS concourse-base
+FROM base-${arch} AS concourse-base
 
 	COPY ./src/concourse /src
 	WORKDIR /src
@@ -106,7 +106,7 @@ FROM concourse-base AS fly-build
 
 # registry-image -
 #
-FROM golang AS registry-image-resource-build
+FROM base-${arch} AS registry-image-resource-build
 
 	COPY ./src/registry-image-resource /src
 	WORKDIR /src
