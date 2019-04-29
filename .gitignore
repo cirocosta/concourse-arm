@@ -1,3 +1,5 @@
 key
 tsa-public-key
 linux-rc
+build
+*.tgz

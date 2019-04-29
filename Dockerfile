@@ -6,8 +6,7 @@ FROM golang AS base
 	RUN set -x && \
 		dpkg --add-architecture armhf && \
 		apt update && \
-		apt install -y \
-			git gcc-arm-linux-gnueabihf
+		apt install -y git gcc-arm-linux-gnueabihf
  	ENV \
 		CC=arm-linux-gnueabihf-gcc \
 		CGO_ENABLED=1 \
@@ -88,21 +87,9 @@ FROM concourse-base AS fly-build
 		-o /usr/local/bin/fly \
 		./fly
 
-
-FROM alpine AS binaries
-
-	COPY --from=concourse-build 		/usr/local/bin/concourse 	/usr/local/concourse/bin/concourse
-	COPY --from=fly-build 			/usr/local/bin/fly 		/usr/local/concourse/bin/fly
-	COPY --from=runc-build 			/usr/local/bin/runc 		/usr/local/concourse/bin/runc
-	COPY --from=gdn-build 			/usr/local/bin/gdn 		/usr/local/concourse/bin/gdn
-	COPY --from=gdn-dadoo-build 		/usr/local/bin/gdn-dadoo	/usr/local/concourse/bin/gdn-dadoo
-	COPY --from=gdn-init-build 		/usr/local/bin/gdn-init		/usr/local/concourse/bin/gdn-init
-
-
-# resource types
+# registry-image
 #
-
-FROM base AS registry-image-resource-build
+FROM golang AS registry-image-resource-build
 
 	COPY ./src/registry-image-resource /src
 	WORKDIR /src
@@ -113,10 +100,17 @@ FROM base AS registry-image-resource-build
 	RUN go build -o /assets/check ./cmd/check
 
 
-FROM arm32v7/ubuntu:bionic AS registry-image-resource
+FROM alpine AS binaries
 
-	COPY --from=registry-image-resource-build assets/ /opt/resource/
-	RUN set -x && \
-		apt update -y && \
-		apt install -y ca-certificates && \
-		rm -rf /var/lib/apt/lists/*
+	COPY --from=concourse-build 	/usr/local/bin/concourse 	/usr/local/concourse/bin/concourse
+	COPY --from=fly-build 		/usr/local/bin/fly 		/usr/local/concourse/bin/fly
+	COPY --from=runc-build 		/usr/local/bin/runc 		/usr/local/concourse/bin/runc
+	COPY --from=gdn-build 		/usr/local/bin/gdn 		/usr/local/concourse/bin/gdn
+	COPY --from=gdn-dadoo-build 	/usr/local/bin/gdn-dadoo	/usr/local/concourse/bin/gdn-dadoo
+	COPY --from=gdn-init-build 	/usr/local/bin/gdn-init		/usr/local/concourse/bin/gdn-init
+
+	COPY --from=registry-image-resource-build \
+		/assets/ \
+		/usr/local/concourse/resource-types/registry-image/
+
+
