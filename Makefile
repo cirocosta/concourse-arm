@@ -7,13 +7,15 @@ dockerized: | dockerized-binaries dockerized-registry-image-resource
 
 dockerized-binaries:
 	mkdir -p ./build/concourse/bin
-	DOCKER_BUILDKIT=1 docker build -t binaries --target binaries .
+	DOCKER_BUILDKIT=1 \
+		docker build -t binaries --target binaries .
 	docker rm binaries || true
-	docker create --name binaries binaries
-	docker cp binaries:/usr/local/concourse/bin/ ./build/concourse/bin/
+	docker create --name binaries binaries /bin/sh
+	docker cp binaries:/usr/local/concourse/bin/ ./build/concourse/
 
 dockerized-registry-image-resource:
-	DOCKER_BUILDKIT=1 docker build -f ./Dockerfile.registry-image-resource -t registry-image-resource .
+	DOCKER_BUILDKIT=1 \
+		docker build -t registry-image-resource --target registry-image-resource .
 	mkdir -p ./build/concourse/resource-types/registry-image
 	docker rm temp || true
 	docker create --name temp \

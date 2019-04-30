@@ -1,9 +1,0 @@
-# # vim: set ft=dockerfile:
-
-FROM arm32v7/ubuntu:bionic AS registry-image-resource
-
-COPY --from=binaries /usr/local/concourse/resource-types/registry-image/ /opt/resource/
-
-RUN apt update -y && \
-	apt install -y ca-certificates && \
-	rm -rf /var/lib/apt/lists/*
