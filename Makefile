@@ -1,26 +1,44 @@
+# default flags to be used when building any go code.
+#
 GOLANG_BUILD_FLAGS = -tags netgo -ldflags '-w -extldflags "-static"'
-BUILD_DIR = /usr/local/concourse
+
+# architecture to target at when building.
+#
+ARCH ?= arm64
 
 
-dockerized: | dockerized-binaries dockerized-registry-image-resource
-	tar -czvf ./concourse.tgz -C ./build concourse/
+# directory where the results of a local compilation should
+# be placed.
+#
+BUILD_DIR ?= ./build/$(ARCH)/concourse
+
+
+
+dockerized: dockerized-arm64 dockerized-armhf
+
+
+dockerized-arm64: ARCH=arm64
+dockerized-armhf: ARCH=armhf
+
+dockerized-%: | dockerized-binaries dockerized-registry-image-resource
+	tar -czvf ./build/concourse-$(ARCH).tgz -C $(dir $(BUILD_DIR)) concourse
 
 dockerized-binaries:
-	mkdir -p ./build/concourse/bin
+	mkdir -p $(BUILD_DIR)/bin
 	DOCKER_BUILDKIT=1 \
 		docker build -t binaries --target binaries .
 	docker rm binaries || true
 	docker create --name binaries binaries /bin/sh
-	docker cp binaries:/usr/local/concourse/bin/ ./build/concourse/
+	docker cp binaries:/usr/local/concourse/bin/ $(BUILD_DIR)/
 
 dockerized-registry-image-resource:
 	DOCKER_BUILDKIT=1 \
 		docker build -t registry-image-resource --target registry-image-resource .
-	mkdir -p ./build/concourse/resource-types/registry-image
+	mkdir -p $(BUILD_DIR)/resource-types/registry-image
 	docker rm temp || true
 	docker create --name temp \
 		registry-image-resource
-	cd ./build/concourse/resource-types/registry-image && \
+	cd $(BUILD_DIR)/resource-types/registry-image && \
 		docker export temp | gzip > ./rootfs.tgz && \
 		echo '{ "type": "registry-image-arm", "version": "0.0.3" }' > resource_metadata.json
 	docker rm temp
@@ -53,7 +71,7 @@ run:
 	CONCOURSE_GARDEN_ALLOW_HOST_ACCESS=true \
 	CONCOURSE_GARDEN_LOG_LEVEL=debug \
 	CONCOURSE_GARDEN_INIT_BIN=$(BUILD_DIR)/bin/gdn-init \
-	CONCOURSE_GARDEN_RUNTIME_PLUGIN=$(BUILD_DIR)/bin/gdn-runc \
+	CONCOURSE_GARDEN_RUNTIME_PLUGIN=$(BUILD_DIR)/bin/runc \
 	CONCOURSE_GARDEN_DADOO_BIN=$(BUILD_DIR)/bin/gdn-dadoo \
 		sudo -E $(BUILD_DIR)/bin/concourse worker \
 			--name=raspberry-pi \
