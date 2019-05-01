@@ -44,7 +44,7 @@ FROM base-${arch} AS runc-build
 	WORKDIR /go/src/github.com/opencontainers/runc
 
 	RUN go build \
-		-ldflags "-X main.gitCommit=dirty -X main.version=1.0.0-rc8+dev" \
+		-ldflags "-X main.gitCommit=dirty -X main.version=1.0.0-rc8+dev -extldflags '-static'" \
 		-o /usr/local/bin/runc \
 		-tags "seccomp" \
 		-v \
@@ -63,6 +63,7 @@ FROM gdn-base AS gdn-build
 
 	RUN go build \
 		-tags netgo \
+		-ldflags "-extldflags '-static'" \
 		-o /usr/local/bin/gdn \
 		./cmd/gdn
 
@@ -70,6 +71,7 @@ FROM gdn-base AS gdn-dadoo-build
 
 	RUN go build \
 		-tags netgo \
+		-ldflags "-extldflags '-static'" \
 		-o /usr/local/bin/gdn-dadoo \
 		./cmd/gdn
 
@@ -77,7 +79,7 @@ FROM gdn-base AS gdn-init-build
 
 	RUN set -x && \
 		cd cmd/init && \
-		$CC -o /usr/local/bin/gdn-init \
+		$CC -static -o /usr/local/bin/gdn-init \
 			init.c ignore_sigchild.c
 
 
@@ -93,6 +95,7 @@ FROM concourse-base AS concourse-build
 
 	RUN go build \
 		-tags netgo \
+		-ldflags "-extldflags '-static'" \
 		-o /usr/local/bin/concourse \
 		./cmd/concourse
 
@@ -100,6 +103,7 @@ FROM concourse-base AS fly-build
 
 	RUN go build \
 		-tags netgo \
+		-ldflags "-extldflags '-static'" \
 		-o /usr/local/bin/fly \
 		./fly
 
@@ -125,9 +129,9 @@ FROM base-${arch} AS registry-image-resource-build
 	WORKDIR /src
 
 	RUN go mod download
-	RUN go build -o /assets/in ./cmd/in
-	RUN go build -o /assets/out ./cmd/out
-	RUN go build -o /assets/check ./cmd/check
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/in ./cmd/in 
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/out ./cmd/out
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/check ./cmd/check
 
 
 
