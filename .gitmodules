@@ -1,7 +1,7 @@
 [submodule "src/guardian"]
 	path = src/guardian
 	url = https://github.com/cirocosta/guardian
-	branch = bump-idmapper
+	branch = armv7
 [submodule "src/concourse"]
 	path = src/concourse
 	url = https://github.com/concourse/concourse
