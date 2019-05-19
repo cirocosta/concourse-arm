@@ -14,24 +14,30 @@ ARCH ?= arm64
 BUILD_DIR ?= ./build/$(ARCH)/concourse
 
 
+# builds the docker image that contains Concourse installed
+# with all dependencies for running web / worker.
+#
+images: image-arm64 image-armhf
+
 
 # builds for all the supported platforms using docker
 # containers and cross compilation.
 #
-dockerized: dockerized-arm64 dockerized-armhf final-image
+dockerized: dockerized-arm64 dockerized-armhf
 
 
-final-image-arm64: ARCH=arm64
-final-image-armhf: ARCH=armhf
-dockerized-arm64: ARCH=arm64
-dockerized-armhf: ARCH=armhf
-
-final-image-%:
+image-arm64: ARCH=arm64
+image-armhf: ARCH=armhf
+image-%: dockerized-%
 	docker build \
+		--build-arg arch=$* \
 		-t cirocosta/concourse-arm:$* \
 		-f ./src/concourse-docker/Dockerfile \
 		./build/$*
 
+
+dockerized-arm64: ARCH=arm64
+dockerized-armhf: ARCH=armhf
 dockerized-%: dockerized-binaries dockerized-registry-image-resource
 	tar -czvf ./build/$(ARCH)/concourse.tgz -C $(dir $(BUILD_DIR)) concourse
 
@@ -43,10 +49,15 @@ dockerized-%: dockerized-binaries dockerized-registry-image-resource
 dockerized-binaries:
 	mkdir -p $(BUILD_DIR)/bin
 	DOCKER_BUILDKIT=1 \
-		docker build -t binaries --target binaries .
-	docker rm binaries || true
-	docker create --name binaries binaries /bin/sh
-	docker cp binaries:/usr/local/concourse/bin/ $(BUILD_DIR)/
+		docker build \
+			--build-arg arch=$(ARCH) \
+			-t binaries:$(ARCH) \
+			--target binaries \
+			.
+	docker rm binaries-$(ARCH) || true
+	docker create --name binaries-$(ARCH) binaries:$(ARCH) /bin/sh
+	docker cp binaries-$(ARCH):/usr/local/concourse/bin/ $(BUILD_DIR)/
+
 
 
 # builds the registry-image resource type using a mix of 
@@ -54,15 +65,19 @@ dockerized-binaries:
 #
 dockerized-registry-image-resource:
 	DOCKER_BUILDKIT=1 \
-		docker build -t registry-image-resource --target registry-image-resource .
+		docker build \
+			--build-arg arch=$(ARCH) \
+			-t registry-image-resource:$(ARCH) \
+			--target registry-image-resource \
+			.
 	mkdir -p $(BUILD_DIR)/resource-types/registry-image
-	docker rm temp || true
-	docker create --name temp \
-		registry-image-resource
+	docker rm registry-image-resource-$(ARCH) || true
+	docker create --name registry-image-resource-$(ARCH) \
+		registry-image-resource:$(ARCH)
 	cd $(BUILD_DIR)/resource-types/registry-image && \
-		docker export temp | gzip > ./rootfs.tgz && \
+		docker export registry-image-resource-$(ARCH) | gzip > ./rootfs.tgz && \
 		echo '{ "type": "registry-image-arm", "version": "0.0.6" }' > resource_metadata.json
-	docker rm temp
+	docker rm registry-image-resource-$(ARCH)
 
 
 clean:
