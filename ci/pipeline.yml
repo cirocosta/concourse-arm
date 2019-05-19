@@ -12,7 +12,7 @@ resources:
 
   - name: builder-image-arm64
     tags: [arm]
-    type: registry-image
+    type: registry-image-arm
     source:
       repository: cirocosta/builder-task
       tag: arm64
