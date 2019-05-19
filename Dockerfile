@@ -135,8 +135,8 @@ FROM base-${arch} AS registry-image-resource-build
 
 
 
-FROM arm64v8/ubuntu:bionic AS resource-rootfs-armhf
-FROM arm32v7/ubuntu:bionic AS resource-rootfs-arm64
+FROM arm64v8/ubuntu:bionic AS resource-rootfs-arm64
+FROM arm32v7/ubuntu:bionic AS resource-rootfs-armhf
 
 
 # registry-image-resource-${arch} - the final representation of the registry-image
