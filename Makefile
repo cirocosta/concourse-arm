@@ -18,15 +18,23 @@ BUILD_DIR ?= ./build/$(ARCH)/concourse
 # builds for all the supported platforms using docker
 # containers and cross compilation.
 #
-dockerized: dockerized-arm64 dockerized-armhf
+dockerized: dockerized-arm64 dockerized-armhf final-image
 
 
+final-image-arm64: ARCH=arm64
+final-image-armhf: ARCH=armhf
 dockerized-arm64: ARCH=arm64
 dockerized-armhf: ARCH=armhf
 
+final-image-%:
+	docker build \
+		-t cirocosta/concourse-arm:$* \
+		-f ./src/concourse-docker/Dockerfile \
+		./build/$*
 
 dockerized-%: dockerized-binaries dockerized-registry-image-resource
-	tar -czvf ./build/concourse-$(ARCH).tgz -C $(dir $(BUILD_DIR)) concourse
+	tar -czvf ./build/$(ARCH)/concourse.tgz -C $(dir $(BUILD_DIR)) concourse
+
 
 
 # builds all of the binaries needed for Concourse for a
