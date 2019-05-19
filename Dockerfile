@@ -135,14 +135,38 @@ FROM base-${arch} AS registry-image-resource-build
 
 
 
-FROM arm64v8/ubuntu:bionic AS resource-rootfs-arm64
-FROM arm32v7/ubuntu:bionic AS resource-rootfs-armhf
+FROM arm64v8/ubuntu:bionic AS rootfs-arm64
+FROM arm32v7/ubuntu:bionic AS rootfs-armhf
+
+
+# builder -
+#
+FROM base-${arch} AS img-build
+
+	COPY ./src/img /src
+	WORKDIR /src
+
+	RUN go mod download
+	RUN go build \
+		-tags "seccomp noembed" \
+		-ldflags "-extldflags '-static'" \
+		-o /assets/img
+
+FROM rootfs-${arch} AS builder-task-image
+
+	COPY --from=img-build 	/assets/img 		/usr/local/bin/img
+	COPY --from=runc-build 	/usr/local/bin/runc 	/usr/local/bin/runc
+	COPY ./src/builder-task/build /usr/bin/build
+
+	RUN apt update -y && \
+		apt install -y rsync jq && \
+		rm -rf /var/lib/apt/lists/*
 
 
 # registry-image-resource-${arch} - the final representation of the registry-image
 # 			    	    Concourse resource type.
 #
-FROM resource-rootfs-${arch} AS registry-image-resource
+FROM rootfs-${arch} AS registry-image-resource
 
 	COPY --from=registry-image-resource-build \
 		/assets/ \

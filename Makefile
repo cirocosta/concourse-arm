@@ -43,7 +43,7 @@ image-%: dockerized-%
 
 dockerized-arm64: ARCH=arm64
 dockerized-armhf: ARCH=armhf
-dockerized-%: dockerized-binaries dockerized-registry-image-resource
+dockerized-%: binaries registry-image-resource
 	tar -czvf ./build/$(ARCH)/concourse.tgz -C $(dir $(BUILD_DIR)) concourse
 
 
@@ -51,7 +51,7 @@ dockerized-%: dockerized-binaries dockerized-registry-image-resource
 # builds all of the binaries needed for Concourse for a
 # specific platform (`$ARCH`).
 #
-dockerized-binaries:
+binaries:
 	mkdir -p $(BUILD_DIR)/bin
 	DOCKER_BUILDKIT=1 \
 		docker build \
@@ -64,11 +64,19 @@ dockerized-binaries:
 	docker cp binaries-$(ARCH):/usr/local/concourse/bin/ $(BUILD_DIR)/
 
 
+builder:
+	DOCKER_BUILDKIT=1 \
+		docker build \
+			--build-arg arch=$(ARCH) \
+			-t img:$(ARCH) \
+			--target builder-task-image \
+			.
+
 
 # builds the registry-image resource type using a mix of 
 # cross-platform compilation and and processor emulation.
 #
-dockerized-registry-image-resource:
+registry-image-resource:
 	DOCKER_BUILDKIT=1 \
 		docker build \
 			--build-arg arch=$(ARCH) \

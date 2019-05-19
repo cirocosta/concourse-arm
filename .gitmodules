@@ -12,3 +12,9 @@
 [submodule "src/github.com/opencontainers/runc"]
 	path = src/github.com/opencontainers/runc
 	url = https://github.com/opencontainers/runc
+[submodule "src/img"]
+	path = src/img
+	url = https://github.com/genuinetools/img
+[submodule "src/builder-task"]
+	path = src/builder-task
+	url = https://github.com/concourse/builder-task
