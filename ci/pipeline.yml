@@ -9,30 +9,45 @@ resources:
     type: registry-image
     source: { repository: cirocosta/builder }
 
+
+  - name: builder-image-arm64
+    tags: [arm]
+    type: registry-image
+    source:
+      repository: cirocosta/builder-task
+      tag: arm64
+
  
 jobs:
   - name: build
     public: true
     plan:
-      - aggregate:
+      - in_parallel:
         - get: repository
           trigger: true
         - get: builder-image
+          trigger: true
+        - get: builder-image-arm64
+          tags: [arm]
+          trigger: true
 
-      - aggregate:
-        - task: build-binaries
-          image: builder-image
-          privileged: true
-          params: { TARGET: binaries }
-          output_mapping: { image: image_binaries }
-          file: repository/ci/tasks/build-image.yml
+      - in_parallel:
+          fail_fast: true
+          steps:
+          - task: build-binaries
+            image: builder-image
+            privileged: true
+            params: { TARGET: binaries }
+            output_mapping: { image: image_binaries }
+            file: repository/ci/tasks/build-image.yml
 
-        - task: build-registry-image-resource
-          image: builder-image
-          privileged: true
-          params: { TARGET: registry-image-resource }
-          output_mapping: { image: image_registry-image-resource }
-          file: repository/ci/tasks/build-image.yml
+          - task: build-registry-image-resource
+            tags: [arm]
+            image: builder-image-arm64
+            privileged: true
+            params: { TARGET: registry-image-resource }
+            output_mapping: { image: image_registry-image-resource }
+            file: repository/ci/tasks/build-image.yml
 
       - task: produce-rc
         image: image_binaries

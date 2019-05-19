@@ -159,7 +159,7 @@ FROM rootfs-${arch} AS builder-task-image
 	COPY ./src/builder-task/build /usr/bin/build
 
 	RUN apt update -y && \
-		apt install -y rsync jq && \
+		apt install -y ca-certificates rsync jq && \
 		rm -rf /var/lib/apt/lists/*
 
 

@@ -68,7 +68,7 @@ builder:
 	DOCKER_BUILDKIT=1 \
 		docker build \
 			--build-arg arch=$(ARCH) \
-			-t img:$(ARCH) \
+			--tag cirocosta/builder-task:$(ARCH) \
 			--target builder-task-image \
 			.
 
