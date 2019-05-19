@@ -3,11 +3,11 @@ resources:
     type: git
     source:
       uri: https://((github-token))@github.com/cirocosta/concourse-arm
-      branch: dockerized-builds
 
   - name: builder-image
     type: registry-image
-    source: { repository: cirocosta/builder }
+    source: 
+      repository: cirocosta/builder
 
 
   - name: builder-image-arm64
@@ -45,7 +45,7 @@ jobs:
             tags: [arm]
             image: builder-image-arm64
             privileged: true
-            params: { TARGET: registry-image-resource }
+            params: { TARGET: registry-image-resource, BUILD_ARG_arch: native }
             output_mapping: { image: image_registry-image-resource }
             file: repository/ci/tasks/build-image.yml
 
