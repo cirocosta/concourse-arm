@@ -73,7 +73,7 @@ FROM gdn-base AS gdn-dadoo-build
 		-tags netgo \
 		-ldflags "-extldflags '-static'" \
 		-o /usr/local/bin/gdn-dadoo \
-		./cmd/gdn
+		./cmd/dadoo
 
 FROM gdn-base AS gdn-init-build
 
@@ -139,14 +139,14 @@ FROM arm64v8/ubuntu:bionic AS resource-rootfs-armhf
 FROM arm32v7/ubuntu:bionic AS resource-rootfs-arm64
 
 
-# registry-image-resource-armhf - the final representation of the registry-image
-# 			    	  Concourse resource type.
+# registry-image-resource-${arch} - the final representation of the registry-image
+# 			    	    Concourse resource type.
 #
 FROM resource-rootfs-${arch} AS registry-image-resource
 
 	COPY --from=registry-image-resource-build \
 		/assets/ \
-		/usr/local/concourse/resource-types/registry-image/
+		/opt/resource/
 
 	RUN apt update -y && \
 		apt install -y ca-certificates && \
