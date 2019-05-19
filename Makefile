@@ -8,6 +8,11 @@ GOLANG_BUILD_FLAGS = -tags netgo -ldflags '-w -extldflags "-static"'
 ARCH ?= arm64
 
 
+# concourse version
+#
+VERSION ?= 5.2.0
+
+
 # directory where the results of a local compilation should
 # be placed.
 #
@@ -31,7 +36,7 @@ image-armhf: ARCH=armhf
 image-%: dockerized-%
 	docker build \
 		--build-arg arch=$* \
-		-t cirocosta/concourse-arm:$* \
+		-t cirocosta/concourse-arm:$(VERSION)-$* \
 		-f ./src/concourse-docker/Dockerfile \
 		./build/$*
 

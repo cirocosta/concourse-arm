@@ -129,9 +129,9 @@ FROM base-${arch} AS registry-image-resource-build
 	WORKDIR /src
 
 	RUN go mod download
-	RUN go build -ldflags "-extldflags '-static'" -o /assets/in ./cmd/in 
-	RUN go build -ldflags "-extldflags '-static'" -o /assets/out ./cmd/out
-	RUN go build -ldflags "-extldflags '-static'" -o /assets/check ./cmd/check
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/in 	./cmd/in
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/out 	./cmd/out
+	RUN go build -ldflags "-extldflags '-static'" -o /assets/check 	./cmd/check
 
 
 
