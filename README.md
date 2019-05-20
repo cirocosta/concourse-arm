@@ -7,6 +7,7 @@ Run [`concourse`](https://concourse-ci.org) workers using ARM devices (yep, incl
 
 
 - [what's inside?](#whats-inside)
+- [how does it work?](#how-does-it-work)
 - [installing](#installing)
   - [using docker](#using-docker)
   - [binaries](#binaries)
