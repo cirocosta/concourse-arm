@@ -13,8 +13,5 @@ outputs:
 - name: rootfs
 - name: image
 
-caches:
-- path: cache
-
 run: 
   path: build
