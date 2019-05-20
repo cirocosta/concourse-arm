@@ -29,8 +29,6 @@ A slightly modified version of Concourse, having just a single resource type ([`
 - container images (see ["using docker"](#using-docker)), and
 - raw binaries (see ["binaries"](#binaries))
 
-![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/badge)
-
 
 ### using docker
 
@@ -80,6 +78,13 @@ tar -zxvf concourse-*.tgz -C /usr/local
 ## building from source
 
 All of the source code necessary for building `concourse-arm` is packed in the this repository by leveraging [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
+
+| component      | build status |
+| -------------- | ------------ |
+| builder        | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/badge) |
+| registry-image | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/registry-image-resource) |
+| concourse      | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/concourse) |
+
 
 ### dependencies
 
