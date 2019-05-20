@@ -101,7 +101,7 @@ jobs:
           passed: [registry-image-resource]
           tags: [arm]
           trigger: true
-        - {get: alpine}
+        - {get: ubuntu}
         - {get: builder-task-image}
         - {get: builder-task-image-arm64, tags: [arm]}
 
@@ -118,7 +118,7 @@ jobs:
 
               - task: produce-rc-arm64
                 file: repository/ci/tasks/produce-rc.yml
-                image: alpine
+                image: ubuntu
                 input_mapping: 
                   binaries: binaries-arm64
                   registry-image-resource: registry-image-resource-arm64
@@ -143,7 +143,7 @@ jobs:
 
               - task: produce-rc-arm
                 file: repository/ci/tasks/produce-rc.yml
-                image: alpine
+                image: ubuntu
                 input_mapping: 
                   binaries: binaries-arm
                   registry-image-resource: registry-image-resource-arm
@@ -180,10 +180,10 @@ resources:
     icon: github-circle
     source: {uri: https://((github-token))@github.com/cirocosta/concourse-arm}
 
-  - name: alpine
+  - name: ubuntu
     type: registry-image
     icon: docker
-    source: {repository: alpine}
+    source: {repository: ubuntu}
 
   - name: builder-task-image
     type: registry-image
