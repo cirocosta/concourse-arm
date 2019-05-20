@@ -28,6 +28,7 @@ jobs:
 
       - in_parallel:
           fail_fast: true
+          steps:
             - put: builder-task-image-arm64
               get_params: {format: oci}
               inputs: [image-arm64]
