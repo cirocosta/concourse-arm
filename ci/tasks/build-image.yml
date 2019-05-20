@@ -12,4 +12,7 @@ inputs:
 outputs:
 - name: image
 
+caches:
+- path: cache
+
 run: {path: build}
