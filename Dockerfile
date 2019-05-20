@@ -144,8 +144,9 @@ FROM base-${arch} AS registry-image-resource-build
 
 
 
-FROM arm64v8/ubuntu:bionic AS rootfs-arm64
-FROM arm32v7/ubuntu:bionic AS rootfs-armhf
+FROM arm64v8/ubuntu:bionic 	AS rootfs-arm64
+FROM arm32v7/ubuntu:bionic 	AS rootfs-armhf
+FROM ubuntu:bionic 		AS rootfs-native
 
 
 # builder -
@@ -168,7 +169,7 @@ FROM rootfs-${arch} AS builder-task-image
 	COPY ./src/builder-task/build /usr/bin/build
 
 	RUN apt update -y && \
-		apt install -y ca-certificates rsync jq && \
+		apt install -y git ca-certificates rsync jq && \
 		rm -rf /var/lib/apt/lists/*
 
 
