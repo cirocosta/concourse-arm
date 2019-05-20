@@ -2,6 +2,20 @@
 
 Run [`concourse`](https://concourse-ci.org) workers using ARM devices (yep, including your Raspberry Pi!)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [what's inside?](#whats-inside)
+- [installing](#installing)
+  - [using Docker](#using-docker)
+  - [binaries](#binaries)
+- [building from source](#building-from-source)
+  - [dependencies](#dependencies)
+  - [steps](#steps)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 ## what's inside?
 
@@ -9,6 +23,13 @@ A slightly modified version of Concourse, having just a single resource type ([`
 
 
 ## installing
+
+`concourse-arm` is provided in two flavors:
+
+- container images (see ["using docker"](#using-docker)), and
+- raw binaries (see ["binaries"](#binaries))
+
+![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/badge)
 
 ### using Docker
 
@@ -51,15 +72,25 @@ docker run \
 
 ## building from source
 
+### dependencies
+
+Regardless of the desired output (container images or binaries), the process of building the components require something that can build Dockerfiles (either Docker itself or other builders like [buildkit](https://github.com/moby/buildkit), [img](https://github.com/genuinetools/img) or anything like that).
+
+The only hard requirement is that when building targets that require running steps that execute ARM-based binaries, the ability to run those is essential ([Docker for Mac](https://docs.docker.com/docker-for-mac/install/) makes that super easy, but a combination of `binfmt_misc` and `qemu-user-static` also works).
+
+### steps
+
 1. clone this repo with all submodules
 
 ```
 git clone https://github.com/cirocosta/concourse-arm --recurse-submodules -j2
 ```
 
-2. the `cirocosta/concourse-arm:(arm64|armhf)` images
+2. build the `cirocosta/concourse-arm:(arm64|armhf)` container images
 
 ```
 make images -j4
 ```
+
+ps.: building the container images will involve generating binaries and resource types under `./build` for each supported architecture.
 
