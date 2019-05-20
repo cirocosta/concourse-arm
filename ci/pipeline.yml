@@ -1,62 +1,213 @@
 resources:
   - name: repository
     type: git
+    icon: github-circle
     source:
       uri: https://((github-token))@github.com/cirocosta/concourse-arm
 
-  - name: builder-image
+  - name: alpine
     type: registry-image
+    icon: docker
+    source:
+      repository: alpine
+
+  - name: builder-task-image
+    type: registry-image
+    icon: docker
     source: 
-      repository: cirocosta/builder
+      repository: cirocosta/builder-task
+      tag: amd64
 
-
-  - name: builder-image-arm64
+  - name: builder-task-image-arm64
     tags: [arm]
     type: registry-image-arm
+    icon: docker
     source:
       repository: cirocosta/builder-task
       tag: arm64
+      username: ((docker-user))
+      password: ((docker-password))
 
- 
+  - name: builder-task-image-armhf
+    tags: [arm]
+    type: registry-image-arm
+    icon: docker
+    source:
+      repository: cirocosta/builder-task
+      tag: armhf
+      username: ((docker-user))
+      password: ((docker-password))
+
+  - name: registry-image-resource-arm64
+    tags: [arm]
+    type: registry-image-arm
+    icon: docker
+    source:
+      repository: cirocosta/registry-image-resource
+      tag: arm64
+      platform: {os: linux, architecture: arm64}
+      username: ((docker-user))
+      password: ((docker-password))
+
+#   - name: concourse-arm-image-arm64
+#     tags: [arm]
+#     type: registry-image
+#     icon: docker
+#     source:
+#       repository: cirocosta/concourse-arm
+#       tag: arm64
+#       platform: {os: linux, architecture: arm64}
+#       username: ((docker-user))
+#       password: ((docker-password))
+
+
 jobs:
-  - name: build
+  - name: builder
+    serial: true
     public: true
     plan:
       - in_parallel:
         - get: repository
           trigger: true
-        - get: builder-image
-          trigger: true
-        - get: builder-image-arm64
+        - get: builder-task-image-arm64
           tags: [arm]
-          trigger: true
 
       - in_parallel:
           fail_fast: true
           steps:
-          - task: build-binaries
-            image: builder-image
-            privileged: true
-            params: { TARGET: binaries }
-            output_mapping: { image: image_binaries }
-            file: repository/ci/tasks/build-image.yml
+            - task: build-arm64
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              params: { TARGET: builder-task-image, PLATFORM: arm64, BUILD_ARG_arch: native }
+              output_mapping: {image: image-arm64}
+              file: repository/ci/tasks/build-image.yml
 
-          - task: build-registry-image-resource
-            tags: [arm]
-            image: builder-image-arm64
-            privileged: true
-            params: { TARGET: registry-image-resource, BUILD_ARG_arch: native }
-            output_mapping: { image: image_registry-image-resource }
-            file: repository/ci/tasks/build-image.yml
+            - task: build-armhf
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              params: { TARGET: builder-task-image, PLATFORM: arm, BUILD_ARG_arch: native }
+              output_mapping: {image: image-armhf}
+              file: repository/ci/tasks/build-image.yml
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - put: builder-task-image-arm64
+              tags: [arm]
+              inputs: [image-arm64]
+              get_params: {format: oci}
+              params: {image: image-arm64/image.tar}
+            - put: builder-task-image-armhf
+              tags: [arm]
+              inputs: [image-armhf]
+              get_params: {format: oci}
+              params: {image: image-armhf/image.tar}
+
+
+  - name: registry-image-resource
+    serial: true
+    public: true
+    plan:
+      - in_parallel:
+        - get: repository
+          trigger: true
+        - get: builder-task-image-arm64
+          tags: [arm]
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - task: build-arm64
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              output_mapping: {image: image-arm64}
+              params: { TARGET: registry-image-resource, PLATFORM: arm64, BUILD_ARG_arch: native }
+              file: repository/ci/tasks/build-image.yml
+
+            - task: build-armhf
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              output_mapping: {image: image-armhf}
+              params: { TARGET: registry-image-resource, PLATFORM: arm,  BUILD_ARG_arch: native }
+              file: repository/ci/tasks/build-image.yml
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - put: registry-image-resource-arm64
+              tags: [arm]
+              inputs: [image-arm64]
+              get_params: {format: oci}
+              params: {image: image-arm64/image.tar}
+
+  - name: concourse
+    serial: true
+    public: true
+    plan:
+      - in_parallel:
+        - get: repository
+          passed: [registry-image-resource]
+          trigger: true
+        - get: registry-image-resource-arm64
+          passed: [registry-image-resource]
+          tags: [arm]
+          trigger: true
+        - get: alpine
+        - get: builder-task-image
+        - get: builder-task-image-arm64
+          tags: [arm]
+
+      - task: build-binaries
+        image: builder-task-image
+        privileged: true
+        output_mapping: {rootfs: binaries}
+        config: 
+          platform: linux
+          params: {TARGET: binaries, REPOSITORY: binaries, CONTEXT: repository}
+          inputs: [{name: repository}]
+          outputs: [{name: rootfs}, {name: image}]
+          caches: [{path: cache}]
+          run: {path: build}
 
       - task: produce-rc
-        image: image_binaries
+        image: alpine
         config:
           platform: linux
-          inputs: [{name: image_registry-image-resource}]
+          inputs: [{name: binaries}, {name: registry-image-resource-arm64}]
+          outputs: [{name: rc}]
           run:
             path: /bin/sh
             args:
-              - -ce
+              - -cex
               - |
-                find .
+                mkdir -p concourse/resource-types/registry-image-resource/
+                tar -czf \
+                  concourse/resource-types/registry-image-resource/rootfs.tgz \
+                  -C ./registry-image-resource-arm64/rootfs .
+
+                echo '{"type": "registry-image-arm", "version": "0.0.6"}' > \
+                  concourse/resource-types/registry-image-resource/resource_metadata.json
+
+                mkdir -p concourse/bin
+                mv ./binaries/rootfs/usr/local/concourse/bin/* concourse/bin/
+
+                tar -czvf ./rc/concourse.tgz ./concourse
+
+      - task: build-image
+        image: builder-task-image-arm64
+        tags: [arm]
+        privileged: true
+        output_mapping: {image: image_concourse-arm}
+        config: 
+          platform: linux
+          params: 
+            REPOSITORY: concourse-arm
+            CONTEXT: ./repository/src/concourse-docker
+            BUILD_ARG_arch: arm64
+          inputs: [{name: repository}]
+          outputs: [{name: image}]
+          caches: [{path: cache}]
+          run: {path: build}
