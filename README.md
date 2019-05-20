@@ -101,11 +101,44 @@ git clone https://github.com/cirocosta/concourse-arm --recurse-submodules -j2
 make images -j4
 ```
 
+If everything went all right, this is what you'll end up with:
+
+```
+build
+├── arm64
+│   ├── concourse
+│   │   ├── bin
+│   │   │   ├── concourse
+│   │   │   ├── fly
+│   │   │   ├── gdn
+│   │   │   ├── gdn-dadoo
+│   │   │   ├── gdn-init
+│   │   │   └── runc
+│   │   └── resource-types
+│   │       └── registry-image
+│   │           ├── resource_metadata.json
+│   │           └── rootfs.tgz
+│   └── concourse.tgz
+└── armhf
+    ├── concourse
+    │   ├── bin
+    │   │   ├── concourse
+    │   │   ├── fly
+    │   │   ├── gdn
+    │   │   ├── gdn-dadoo
+    │   │   ├── gdn-init
+    │   │   └── runc
+    │   └── resource-types
+    │       └── registry-image
+    │           ├── resource_metadata.json
+    │           └── rootfs.tgz
+    └── concourse.tgz
+```
+
 ps.: building the container images will involve generating binaries and resource types under `./build` for each supported architecture.
 
 
 ## license
 
 See [the LICENSE file](./LICENSE).
-
 
