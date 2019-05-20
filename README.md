@@ -82,8 +82,8 @@ All of the source code necessary for building `concourse-arm` is packed in the t
 | component      | build status |
 | -------------- | ------------ |
 | builder        | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/badge) |
-| registry-image | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/registry-image-resource) |
-| concourse      | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/builder/concourse) |
+| registry-image | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/registry-image-resource/badge) |
+| concourse      | ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/jobs/concourse/badge) |
 
 
 ### dependencies
