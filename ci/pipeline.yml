@@ -103,7 +103,7 @@ jobs:
           trigger: true
         - {get: ubuntu}
         - {get: builder-task-image}
-        - {get: builder-task-image-arm64, tags: [arm]}
+        - {get: builder-task-image-arm64, passed: [builder], tags: [arm]}
 
       - in_parallel:
           fail_fast: true
