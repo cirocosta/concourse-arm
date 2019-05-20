@@ -31,7 +31,8 @@ A slightly modified version of Concourse, having just a single resource type ([`
 
 ![](https://hush-house.pivotal.io/api/v1/teams/main/pipelines/concourse-arm/badge)
 
-### using Docker
+
+### using docker
 
 Images are published with the `platform` already according to the platform.
 
@@ -66,11 +67,19 @@ docker run \
 
 ### binaries
 
+Just like you'd [install the regular AMD64 version of Concourse](https://concourse-ci.org/install.html#install), all that's needed is placing the contents of the gzipped tarball into `/usr/local`:
+
+```
+tar -zxvf concourse-*.tgz -C /usr/local
+```
+
 - [v5.2.0 armhf](https://github.com/cirocosta/concourse-arm/releases/download/v5.2.0/concourse-armhf.tgz)
 - [v5.2.0 arm64](https://github.com/cirocosta/concourse-arm/releases/download/v5.2.0/concourse-arm64.tgz)
 
 
 ## building from source
+
+All of the source code necessary for building `concourse-arm` is packed in the this repository by leveraging [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
 
 ### dependencies
 
@@ -93,4 +102,10 @@ make images -j4
 ```
 
 ps.: building the container images will involve generating binaries and resource types under `./build` for each supported architecture.
+
+
+## license
+
+See [the LICENSE file](./LICENSE).
+
 
