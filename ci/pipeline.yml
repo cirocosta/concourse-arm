@@ -7,33 +7,38 @@ jobs:
         - {get: repository, trigger: true}
         - {get: builder-task-image-arm64, tags: [arm]}
 
-      - task: build-arm64
-        file: repository/ci/tasks/build-image.yml
-        image: builder-task-image-arm64
-        output_mapping: {image: image-arm64}
-        params: { TARGET: builder-task-image, PLATFORM: arm64, BUILD_ARG_arch: native }
-        privileged: true
-        tags: [arm]
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - task: build-arm64
+              file: repository/ci/tasks/build-image.yml
+              image: builder-task-image-arm64
+              output_mapping: {image: image-arm64}
+              params: { TARGET: builder-task-image, PLATFORM: arm64, BUILD_ARG_arch: native }
+              privileged: true
+              tags: [arm]
 
-      - task: build-arm
-        file: repository/ci/tasks/build-image.yml
-        image: builder-task-image-arm64
-        output_mapping: {image: image-arm}
-        params: { TARGET: builder-task-image, PLATFORM: arm, BUILD_ARG_arch: native }
-        privileged: true
-        tags: [arm]
+            - task: build-arm
+              file: repository/ci/tasks/build-image.yml
+              image: builder-task-image-arm64
+              output_mapping: {image: image-arm}
+              params: { TARGET: builder-task-image, PLATFORM: arm, BUILD_ARG_arch: native }
+              privileged: true
+              tags: [arm]
 
-      - put: builder-task-image-arm64
-        get_params: {format: oci}
-        inputs: [image-arm64]
-        params: {image: image-arm64/image.tar}
-        tags: [arm]
+      - in_parallel:
+          fail_fast: true
+            - put: builder-task-image-arm64
+              get_params: {format: oci}
+              inputs: [image-arm64]
+              params: {image: image-arm64/image.tar}
+              tags: [arm]
 
-      - put: builder-task-image-arm
-        get_params: {format: oci}
-        inputs: [image-arm]
-        params: {image: image-arm/image.tar}
-        tags: [arm]
+            - put: builder-task-image-arm
+              get_params: {format: oci}
+              inputs: [image-arm]
+              params: {image: image-arm/image.tar}
+              tags: [arm]
 
 
   - name: registry-image-resource
