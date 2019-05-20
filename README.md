@@ -8,11 +8,12 @@ Run [`concourse`](https://concourse-ci.org) workers using ARM devices (yep, incl
 
 - [what's inside?](#whats-inside)
 - [installing](#installing)
-  - [using Docker](#using-docker)
+  - [using docker](#using-docker)
   - [binaries](#binaries)
 - [building from source](#building-from-source)
   - [dependencies](#dependencies)
   - [steps](#steps)
+- [license](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
