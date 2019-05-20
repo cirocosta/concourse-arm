@@ -159,7 +159,6 @@ FROM base-${arch} AS img-build
 	RUN go mod download
 	RUN go build \
 		-tags "seccomp noembed" \
-		-ldflags "-extldflags '-static'" \
 		-o /assets/img
 
 FROM rootfs-${arch} AS builder-task-image
