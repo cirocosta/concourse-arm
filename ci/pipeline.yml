@@ -1,3 +1,160 @@
+jobs:
+  - name: builder
+    serial: true
+    public: true
+    plan:
+      - in_parallel:
+        - {get: repository, trigger: true}
+        - {get: builder-task-image-arm64, tags: [arm]}
+
+      - task: build-arm64
+        file: repository/ci/tasks/build-image.yml
+        image: builder-task-image-arm64
+        output_mapping: {image: image-arm64}
+        params: { TARGET: builder-task-image, PLATFORM: arm64, BUILD_ARG_arch: native }
+        privileged: true
+        tags: [arm]
+
+      - task: build-arm
+        file: repository/ci/tasks/build-image.yml
+        image: builder-task-image-arm64
+        output_mapping: {image: image-arm}
+        params: { TARGET: builder-task-image, PLATFORM: arm, BUILD_ARG_arch: native }
+        privileged: true
+        tags: [arm]
+
+      - put: builder-task-image-arm64
+        get_params: {format: oci}
+        inputs: [image-arm64]
+        params: {image: image-arm64/image.tar}
+        tags: [arm]
+
+      - put: builder-task-image-arm
+        get_params: {format: oci}
+        inputs: [image-arm]
+        params: {image: image-arm/image.tar}
+        tags: [arm]
+
+
+  - name: registry-image-resource
+    serial: true
+    public: true
+    plan:
+      - in_parallel:
+        - {get: repository, trigger: true}
+        - {get: builder-task-image-arm64, tags: [arm]}
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - task: build-arm64
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              output_mapping: {image: image-arm64}
+              params: { TARGET: registry-image-resource, PLATFORM: arm64, BUILD_ARG_arch: native }
+              file: repository/ci/tasks/build-image.yml
+
+            - task: build-arm
+              tags: [arm]
+              image: builder-task-image-arm64
+              privileged: true
+              output_mapping: {image: image-arm}
+              params: { TARGET: registry-image-resource, PLATFORM: arm, BUILD_ARG_arch: native }
+              file: repository/ci/tasks/build-image.yml
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - put: registry-image-resource-arm64
+              tags: [arm]
+              inputs: [image-arm64]
+              get_params: {format: oci}
+              params: {image: image-arm64/image.tar}
+
+            - put: registry-image-resource-arm
+              tags: [arm]
+              inputs: [image-arm]
+              get_params: {format: oci}
+              params: {image: image-arm/image.tar}
+
+
+  - name: concourse
+    serial: true
+    public: true
+    plan:
+      - in_parallel:
+        - get: repository
+          passed: [registry-image-resource]
+          trigger: true
+        - get: registry-image-resource-arm64
+          passed: [registry-image-resource]
+          tags: [arm]
+          trigger: true
+        - get: registry-image-resource-arm
+          passed: [registry-image-resource]
+          tags: [arm]
+          trigger: true
+        - {get: alpine}
+        - {get: builder-task-image}
+        - {get: builder-task-image-arm64, tags: [arm]}
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - task: build-binaries-arm64
+              image: builder-task-image
+              privileged: true
+              output_mapping: {rootfs: binaries-arm64}
+              file: repository/ci/tasks/build-binaries.yml
+              params: {BUILD_ARG_arch: arm64}
+
+            - task: build-binaries-arm
+              file: repository/ci/tasks/build-binaries.yml
+              image: builder-task-image
+              output_mapping: {rootfs: binaries-arm}
+              params: {BUILD_ARG_arch: arm}
+              privileged: true
+
+      - task: produce-rc-arm64
+        image: alpine
+        file: repository/ci/tasks/produce-rc.yml
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - task: build-rc-image-arm64
+              file: repository/ci/tasks/build-rc-image.yml
+              image: builder-task-image-arm64
+              output_mapping: {image: image_concourse-arm64}
+              params: { BUILD_ARG_arch: arm64 }
+              privileged: true
+              tags: [arm]
+
+            - task: build-rc-image-arm
+              file: repository/ci/tasks/build-rc-image.yml
+              image: builder-task-image-arm64
+              output_mapping: {image: image_concourse-arm}
+              params: { BUILD_ARG_arch: arm }
+              privileged: true
+              tags: [arm]
+
+      - in_parallel:
+          fail_fast: true
+          steps:
+            - put: concourse-arm-image-arm64
+              get_params: {format: oci}
+              inputs: [image_concourse-arm64]
+              params: {image: image_concourse-arm64/image.tar}
+              tags: [arm]
+
+            - put: concourse-arm-image-arm
+              get_params: {format: oci}
+              inputs: [image_concourse-arm]
+              params: {image: image_concourse-arm/image.tar}
+              tags: [arm]
+
+
 resources:
   - name: repository
     type: git
@@ -79,145 +236,3 @@ resources:
       password: ((docker-password))
 
 
-jobs:
-  - name: builder
-    serial: true
-    public: true
-    plan:
-      - in_parallel:
-        - {get: repository, trigger: true}
-        - {get: builder-task-image-arm64, tags: [arm]}
-
-      - task: build-arm64
-        file: repository/ci/tasks/build-image.yml
-        image: builder-task-image-arm64
-        output_mapping: {image: image-arm64}
-        params: { TARGET: builder-task-image, PLATFORM: arm64, BUILD_ARG_arch: native }
-        privileged: true
-        tags: [arm]
-
-      - task: build-arm
-        file: repository/ci/tasks/build-image.yml
-        image: builder-task-image-arm
-        output_mapping: {image: image-arm}
-        params: { TARGET: builder-task-image, PLATFORM: arm, BUILD_ARG_arch: native }
-        privileged: true
-        tags: [arm]
-
-      - put: builder-task-image-arm64
-        get_params: {format: oci}
-        inputs: [image-arm64]
-        params: {image: image-arm64/image.tar}
-        tags: [arm]
-
-      - put: builder-task-image-arm
-        get_params: {format: oci}
-        inputs: [image-arm]
-        params: {image: image-arm/image.tar}
-        tags: [arm]
-
-
-  - name: registry-image-resource
-    serial: true
-    public: true
-    plan:
-      - in_parallel:
-        - get: repository
-          trigger: true
-        - get: builder-task-image-arm64
-          tags: [arm]
-
-      - task: build-arm64
-        tags: [arm]
-        image: builder-task-image-arm64
-        privileged: true
-        output_mapping: {image: image-arm64}
-        params: { TARGET: registry-image-resource, PLATFORM: arm64, BUILD_ARG_arch: native }
-        file: repository/ci/tasks/build-image.yml
-
-      - task: build-arm
-        tags: [arm]
-        image: builder-task-image-arm
-        privileged: true
-        output_mapping: {image: image-arm}
-        params: { TARGET: registry-image-resource, PLATFORM: arm, BUILD_ARG_arch: native }
-        file: repository/ci/tasks/build-image.yml
-
-      - put: registry-image-resource-arm64
-        tags: [arm]
-        inputs: [image-arm64]
-        get_params: {format: oci}
-        params: {image: image-arm64/image.tar}
-
-      - put: registry-image-resource-arm
-        tags: [arm]
-        inputs: [image-arm]
-        get_params: {format: oci}
-        params: {image: image-arm/image.tar}
-
-
-  - name: concourse
-    serial: true
-    public: true
-    plan:
-      - in_parallel:
-        - get: repository
-          passed: [registry-image-resource]
-          trigger: true
-        - get: registry-image-resource-arm64
-          passed: [registry-image-resource]
-          tags: [arm]
-          trigger: true
-        - get: registry-image-resource-arm
-          passed: [registry-image-resource]
-          tags: [arm]
-          trigger: true
-        - {get: alpine}
-        - {get: builder-task-image}
-        - {get: builder-task-image-arm64, tags: [arm]}
-
-      - task: build-binaries-arm64
-        image: builder-task-image
-        privileged: true
-        output_mapping: {rootfs: binaries-arm64}
-        file: repository/ci/tasks/build-binaries.yml
-        params: {BUILD_ARG_arch: arm64}
-
-      - task: build-binaries-arm
-        file: repository/ci/tasks/build-binaries.yml
-        image: builder-task-image
-        output_mapping: {rootfs: binaries-arm}
-        params: {BUILD_ARG_arch: arm}
-        privileged: true
-
-      - task: produce-rc-arm64
-        image: alpine
-        file: repository/ci/tasks/produce-rc.yml
-
-      - task: build-rc-image-arm64
-        file: repository/ci/tasks/build-rc-image.yml
-        image: builder-task-image-arm64
-        output_mapping: {image: image_concourse-arm64}
-        params: { BUILD_ARG_arch: arm64 }
-        privileged: true
-        tags: [arm]
-
-      - task: build-rc-image-arm
-        file: repository/ci/tasks/build-rc-image.yml
-        image: builder-task-image-arm64
-        output_mapping: {image: image_concourse-arm}
-        params: { BUILD_ARG_arch: arm }
-        privileged: true
-        tags: [arm]
-
-      - put: concourse-arm-image-arm64
-        get_params: {format: oci}
-        inputs: [image_concourse-arm64]
-        params: {image: image_concourse-arm64/image.tar}
-        tags: [arm]
-
-      - put: concourse-arm-image-arm
-        get_params: {format: oci}
-        inputs: [image_concourse-arm]
-        params: {image: image_concourse-arm/image.tar}
-        tags: [arm]
