@@ -1,0 +1,17 @@
+platform: linux
+
+params: 
+  REPOSITORY: concourse-arm
+  DOCKERFILE: ./repository/src/concourse-docker/Dockerfile
+  CONTEXT: ./rc
+  BUILD_ARG_arch: ~
+
+inputs: 
+- name: repository
+- name: rc
+
+outputs: 
+- name: image
+
+run: 
+  path: build

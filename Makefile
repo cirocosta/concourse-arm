@@ -22,17 +22,17 @@ BUILD_DIR ?= ./build/$(ARCH)/concourse
 # builds the docker image that contains Concourse installed
 # with all dependencies for running web / worker.
 #
-images: image-arm64 image-armhf
+images: image-arm64 image-arm
 
 
 # builds for all the supported platforms using docker
 # containers and cross compilation.
 #
-dockerized: dockerized-arm64 dockerized-armhf
+dockerized: dockerized-arm64 dockerized-arm
 
 
 image-arm64: ARCH=arm64
-image-armhf: ARCH=armhf
+image-arm: ARCH=arm
 image-%: dockerized-%
 	docker build \
 		--build-arg arch=$* \
@@ -42,7 +42,7 @@ image-%: dockerized-%
 
 
 dockerized-arm64: ARCH=arm64
-dockerized-armhf: ARCH=armhf
+dockerized-arm: ARCH=arm
 dockerized-%: binaries registry-image-resource
 	tar -czvf ./build/$(ARCH)/concourse.tgz -C $(dir $(BUILD_DIR)) concourse
 

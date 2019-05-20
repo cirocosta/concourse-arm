@@ -1,0 +1,20 @@
+platform: linux
+
+params: 
+  TARGET: binaries
+  REPOSITORY: binaries
+  CONTEXT: repository
+  BUILD_ARG_arch: ~
+
+inputs: 
+- name: repository
+
+outputs: 
+- name: rootfs
+- name: image
+
+caches:
+- path: cache
+
+run: 
+  path: build

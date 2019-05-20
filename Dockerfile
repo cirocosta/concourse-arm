@@ -1,5 +1,5 @@
 # arch - architecture that we're targetting.
-#	 possible values: armhf | arm64
+#	 possible values: arm | arm64
 #
 ARG arch="arm64"
 
@@ -7,7 +7,7 @@ ARG arch="arm64"
 # base - contains the build tools necessary for building
 #        all the dependencies
 #
-FROM golang AS base-armhf
+FROM golang AS base-arm
 
 	RUN set -x && \
 		dpkg --add-architecture armhf && \
@@ -145,7 +145,7 @@ FROM base-${arch} AS registry-image-resource-build
 
 
 FROM arm64v8/ubuntu:bionic 	AS rootfs-arm64
-FROM arm32v7/ubuntu:bionic 	AS rootfs-armhf
+FROM arm32v7/ubuntu:bionic 	AS rootfs-arm
 FROM ubuntu:bionic 		AS rootfs-native
 
 

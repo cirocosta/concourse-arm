@@ -6,12 +6,12 @@
 
 
 # arch - architecture that we're targetting.
-#	 possible values: armhf | arm64
+#	 possible values: arm | arm64
 #
 ARG arch="arm64"
 
 FROM arm64v8/ubuntu:bionic AS ubuntu-arm64
-FROM arm32v7/ubuntu:bionic AS ubuntu-armhf
+FROM arm32v7/ubuntu:bionic AS ubuntu-arm
 
 
 
