@@ -1,11 +1,12 @@
 platform: linux
 
 inputs: 
-- name: binaries-arm64
-- name: registry-image-resource-arm64
+- name: repository
+- name: binaries
+- name: registry-image-resource
 
 outputs: 
-- name: rc-arm64
+- name: rc
 
 run: 
-  path: repository/ci/tasks/scrupts/produce-rc.sh
+  path: repository/ci/tasks/scripts/produce-rc.sh

@@ -107,42 +107,55 @@ jobs:
       - in_parallel:
           fail_fast: true
           steps:
-            - task: build-binaries-arm64
-              image: builder-task-image
-              privileged: true
-              output_mapping: {rootfs: binaries-arm64}
-              file: repository/ci/tasks/build-binaries.yml
-              params: {BUILD_ARG_arch: arm64}
+            - do:
+              - task: build-binaries-arm64
+                image: builder-task-image
+                privileged: true
+                output_mapping: {rootfs: binaries-arm64}
+                file: repository/ci/tasks/build-binaries.yml
+                params: {BUILD_ARG_arch: arm64}
 
-            - task: build-binaries-arm
-              file: repository/ci/tasks/build-binaries.yml
-              image: builder-task-image
-              output_mapping: {rootfs: binaries-arm}
-              params: {BUILD_ARG_arch: arm}
-              privileged: true
+              - task: produce-rc-arm64
+                file: repository/ci/tasks/produce-rc.yml
+                image: alpine
+                input_mapping: 
+                  binaries: binaries-arm64
+                  registry-image-resource: registry-image-resource-arm64
+                output_mapping: {rc: rc-arm64}
 
-      - task: produce-rc-arm64
-        image: alpine
-        file: repository/ci/tasks/produce-rc.yml
+              - task: build-rc-image-arm64
+                file: repository/ci/tasks/build-rc-image.yml
+                image: builder-task-image-arm64
+                input_mapping: {rc: rc-arm64}
+                output_mapping: {image: image_concourse-arm64}
+                params: { BUILD_ARG_arch: arm64 }
+                privileged: true
+                tags: [arm]
 
-      - in_parallel:
-          fail_fast: true
-          steps:
-            - task: build-rc-image-arm64
-              file: repository/ci/tasks/build-rc-image.yml
-              image: builder-task-image-arm64
-              output_mapping: {image: image_concourse-arm64}
-              params: { BUILD_ARG_arch: arm64 }
-              privileged: true
-              tags: [arm]
+            - do:
+              - task: build-binaries-arm
+                file: repository/ci/tasks/build-binaries.yml
+                image: builder-task-image
+                output_mapping: {rootfs: binaries-arm}
+                params: {BUILD_ARG_arch: arm}
+                privileged: true
 
-            - task: build-rc-image-arm
-              file: repository/ci/tasks/build-rc-image.yml
-              image: builder-task-image-arm64
-              output_mapping: {image: image_concourse-arm}
-              params: { BUILD_ARG_arch: arm }
-              privileged: true
-              tags: [arm]
+              - task: produce-rc-arm
+                file: repository/ci/tasks/produce-rc.yml
+                image: alpine
+                input_mapping: 
+                  binaries: binaries-arm
+                  registry-image-resource: registry-image-resource-arm
+                output_mapping: {rc: rc-arm}
+
+              - task: build-rc-image-arm
+                file: repository/ci/tasks/build-rc-image.yml
+                image: builder-task-image-arm64
+                input_mapping: {rc: rc-arm}
+                output_mapping: {image: image_concourse-arm}
+                params: { BUILD_ARG_arch: arm }
+                privileged: true
+                tags: [arm]
 
       - in_parallel:
           fail_fast: true

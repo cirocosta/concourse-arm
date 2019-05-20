@@ -23,6 +23,11 @@ Run [`concourse`](https://concourse-ci.org) workers using ARM devices (yep, incl
 A slightly modified version of Concourse, having just a single resource type ([`registry-image`](https://github.com/concourse/registry-image-resource)).
 
 
+## how does it work?
+
+For some info on what was needed for Concourse to run on ARM, check out ["How does it work?"](./docs/how-does-it-work.md).
+
+
 ## installing
 
 `concourse-arm` is provided in two flavors:

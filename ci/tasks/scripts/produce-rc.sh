@@ -14,7 +14,7 @@ setup_resource() {
 
 	tar -czf \
 		concourse/resource-types/registry-image-resource/rootfs.tgz \
-		-C ./registry-image-resource-arm64/rootfs .
+		-C ./registry-image-resource/rootfs .
 
 	echo '{
 	"type": "registry-image-arm", 
