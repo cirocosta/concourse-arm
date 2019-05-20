@@ -33,7 +33,7 @@ A slightly modified version of Concourse, having just a single resource type ([`
 
 ### using docker
 
-Images are published with the `platform` already according to the platform.
+Images are published with the `platform` already set according to the platform.
 
 ```
 docker pull cirocosta/concourse-arm:5.2.0
@@ -92,6 +92,7 @@ All of the source code necessary for building `concourse-arm` is packed in the t
 Regardless of the desired output (container images or binaries), the process of building the components require something that can build Dockerfiles (either Docker itself or other builders like [buildkit](https://github.com/moby/buildkit), [img](https://github.com/genuinetools/img) or anything like that).
 
 The only hard requirement is that when building targets that require running steps that execute ARM-based binaries, the ability to run those is essential ([Docker for Mac](https://docs.docker.com/docker-for-mac/install/) makes that super easy, but a combination of `binfmt_misc` and `qemu-user-static` also works).
+
 
 ### steps
 
