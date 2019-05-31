@@ -14,6 +14,7 @@ Run [`concourse`](https://concourse-ci.org) workers using ARM devices (yep, incl
 - [building from source](#building-from-source)
   - [dependencies](#dependencies)
   - [steps](#steps)
+- [todo](#todo)
 - [license](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -26,7 +27,7 @@ A slightly modified version of Concourse, having just a single resource type ([`
 
 ## how does it work?
 
-For some info on what was needed for Concourse to run on ARM, check out ["How does it work?"](./docs/how-does-it-work.md).
+For some info on what was needed for Concourse to run on ARM, check out the ["How does it work?"](./docs/how-does-it-work.md) doc.
 
 
 ## installing
@@ -150,6 +151,11 @@ build
 
 ps.: building the container images will involve generating binaries and resource types under `./build` for each supported architecture.
 
+## todo
+
+There are few things that still need to be finished:
+
+- [ ] have `runc` running with seccomp enabled
 
 ## license
 
