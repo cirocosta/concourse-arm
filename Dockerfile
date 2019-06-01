@@ -1,6 +1,6 @@
 # arch - architecture that we're targetting.
-#	 possible values: arm | arm64
-#
+#	 possible values: arm | arm64 | native
+
 ARG arch="arm64"
 
 
@@ -39,10 +39,11 @@ FROM golang AS base-arm64
 FROM golang AS base-native
 
 	RUN set -x && \
-		dpkg --add-architecture arm64 && \
 		apt update && apt install -y \
 			git gcc libseccomp-dev
- 	ENV CGO_ENABLED=1
+	ENV \
+		CC=gcc \
+		CGO_ENABLED=1
 
 
 # runc -
